@@ -31,6 +31,7 @@ Set-StrictMode -Version 'latest'
 
 # Resource intensive services
 $hogs = @(
+,'Apple Mobile Device Service'
 ,'DSAService'
 ,'DSAUpdateService'
 ,'Intel(R) PROSet Monitoring Service'
@@ -38,17 +39,41 @@ $hogs = @(
 ,'JTAGServer'
 ,'LeapService'
 ,'MullvadVPN'
-,'OVRLibraryService'  # FIXME: this is a tough cookie. Might need to kill him.
+,'NIHardwareService'
+,'NIHostIntegrationAgent'
+#,'OVRLibraryService'  # Stopped by OVRService
 ,'OVRService'
 ,'PaceLicenseDServices'
 ,'Presonus Hardware Access Service'
 ,'rtpMIDIService'
 ,'Shibari.Dom.Server'
 ,'Synergy'
+,'TbtHostControllerService'
 ,'vorpX Service'
 )
 
+$ar_required = @(
+,'LeapService'
+)
+
+$dev_required = @(
+,'JTAGServer'
+#,'kite'
+)
+
+$game_required = @(
+,'Shibari.Dom.Server'
+)
+
+$leisure_required = @(
+,'Apple Mobile Device Service'
+,'Jackett'
+,'MullvadVPN'
+,'Synergy'
+)
+
 $stan_required = @(
+,'Apple Mobile Device Service'
 ,'NIHardwareService'
 ,'NIHostIntegrationAgent'
 ,'PaceLicenseDServices'
@@ -57,32 +82,15 @@ $stan_required = @(
 ,'TbtHostControllerService'
 )
 
-$game_required = @(
-,'Shibari.Dom.Server'
-)
-
-$dev_required = @(
-,'JTAGServer'
-#,'kite'
-)
-
 $vr_required = @(
-,'OVRLibraryService'
+#,'OVRLibraryService'  # Started by OVRService
 ,'OVRService'
 )
 
-$ar_required = $vr_required + @(
-,'LeapService'
-)
+$vrar_required = $vr_required + $ar_required
 
 $vrgame_required = $vr_required + @(
 ,'vorpX Service'
-)
-
-$leisure_required = @(
-,'Jackett'
-,'MullvadVPN'
-,'Synergy'
 )
 
 $modes = @(
@@ -92,6 +100,7 @@ $modes = @(
 ,'LEISURE'
 ,'STAN'
 ,'VR'
+,'VRAR'
 ,'VRGAME'
 )
 
@@ -103,7 +112,19 @@ $modes_required.Add('GAME', $game_required)
 $modes_required.Add('LEISURE', $leisure_required)
 $modes_required.Add('STAN', $stan_required)
 $modes_required.Add('VR', $vr_required)
+$modes_required.Add('VRAR', $vrar_required)
 $modes_required.Add('VRGAME', $vrgame_required)
+
+# Sanity checks
+$ar_required | Where {$hogs -NotContains $_}
+$dev_required | Where {$hogs -NotContains $_}
+$game_required | Where {$hogs -NotContains $_}
+$leisure_required | Where {$hogs -NotContains $_}
+$stan_required | Where {$hogs -NotContains $_}
+$vr_required | Where {$hogs -NotContains $_}
+$vrar_required | Where {$hogs -NotContains $_}
+$vrgame_required | Where {$hogs -NotContains $_}
+$modes_required.Keys | Where {$modes -NotContains $_}
 
 ###
 # Functions
@@ -126,7 +147,7 @@ function Stop-Services
 
     foreach ($Service in $ServicesList)
     {
-        If (Get-Service $Service | Where { $_.Status -eq "Running" -or $_.Status -eq "Paused"})
+        If (Get-Service $Service | Where { $_.Status -eq "Running" -or $_.Status -eq "Paused" })
         {
 
             Write-Host "- $Service"
@@ -181,7 +202,7 @@ ElseIf ($modes.Contains($Mode))
 {
     Write-Host "WIP"
     $required = $modes_required[$Mode]
-    $stop = Compare-Object -ReferenceObject $hogs -DifferenceObject $required -PassThru
+    $stop =  $hogs | Where {$required -NotContains $_}
     Stop-Services($stop)
     Start-Services($required)
 }
