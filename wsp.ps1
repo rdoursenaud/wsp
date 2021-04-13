@@ -1,9 +1,13 @@
-# Windows Services Profiles
-#
-# Copyright 2021 Raphael Doursenaud <rdoursenaud@gmail.com>
-#
-# Selectively suspend and resume services based on profiles/modes
-#
+<#
+Windows Services Profiles
+Copyright 2021 Raphael Doursenaud <rdoursenaud@gmail.com>
+
+.Synopsis
+    Selectively suspend and resume services based on profiles/modes
+
+.Parameter Mode
+    A mode identifier
+ #>
 
 ###
 # Arguments
@@ -13,9 +17,13 @@ param(
     [Parameter(Mandatory = $true)] $Mode = ""
 )
 
-
-Set-StrictMode -Version 'latest'
+#
+#Set-StrictMode -Version 'latest'  # Get-SpecialFolderPath errors in strict mode
 #Requires -RunAsAdministrator
+
+$ScriptDir = Split-Path $script:MyInvocation.MyCommand.Path
+. (Join-Path -Path $ScriptDir -ChildPath 'Get-SpecialFolderPath.ps1')
+
 
 ###
 # Useful debugging commands
@@ -116,27 +124,19 @@ $modes_required.Add('VRAR', $vrar_required)
 $modes_required.Add('VRGAME', $vrgame_required)
 
 # Sanity checks
-$ar_required | Where {$hogs -NotContains $_}
-$dev_required | Where {$hogs -NotContains $_}
-$game_required | Where {$hogs -NotContains $_}
-$leisure_required | Where {$hogs -NotContains $_}
-$stan_required | Where {$hogs -NotContains $_}
-$vr_required | Where {$hogs -NotContains $_}
-$vrar_required | Where {$hogs -NotContains $_}
-$vrgame_required | Where {$hogs -NotContains $_}
-$modes_required.Keys | Where {$modes -NotContains $_}
+$ar_required | Where { $hogs -NotContains $_ }
+$dev_required | Where { $hogs -NotContains $_ }
+$game_required | Where { $hogs -NotContains $_ }
+$leisure_required | Where { $hogs -NotContains $_ }
+$stan_required | Where { $hogs -NotContains $_ }
+$vr_required | Where { $hogs -NotContains $_ }
+$vrar_required | Where { $hogs -NotContains $_ }
+$vrgame_required | Where { $hogs -NotContains $_ }
+$modes_required.Keys | Where { $modes -NotContains $_ }
 
 ###
 # Functions
 ###
-
-function Help
-{
-    Write-Host "Usage: wsp.ps -Mode [ModeName]}"
-    Write-Host ""
-    Write-Host "Available modes: $modes"
-}
-
 function Stop-Services
 {
     param (
@@ -194,20 +194,34 @@ function Start-Services
 # Main
 ####
 
-If ($Mode -eq "")
+If ($Mode -eq "CS")
 {
-    Help
+    # Create shortcuts
+    $CSIDL_COMMON_STARTMENU = Get-SpecialFolderPath -Name CSIDL_COMMON_STARTMENU
+    $script = $script:MyInvocation.MyCommand.Path
+    $WshShell = New-Object -ComObject WScript.Shell
+    foreach ($mode in $modes)
+    {
+        $lnkPath = "$CSIDL_COMMON_STARTMENU\WSP-$mode.lnk"
+        $lnk = $WshShell.CreateShortcut($lnkPath)
+        $lnk.TargetPath = "$PSHome\pwsh.exe"
+        $lnk.Arguments = "$script $mode"
+        $lnk.Save()
+
+        # Hackery to force tarting with elevated privileges
+        $bytes = [System.IO.File]::ReadAllBytes($lnkPath)
+        $bytes[0x15] = $bytes[0x15] -bor 0x20 #set byte 21 (0x15) bit 6 (0x20) ON
+        [System.IO.File]::WriteAllBytes($lnkPath, $bytes)
+    }
 }
 ElseIf ($modes.Contains($Mode))
 {
-    Write-Host "WIP"
     $required = $modes_required[$Mode]
-    $stop =  $hogs | Where {$required -NotContains $_}
+    $stop = $hogs | Where { $required -NotContains $_ }
     Stop-Services($stop)
     Start-Services($required)
 }
 Else
 {
     Write-Error "Unknown mode: $Mode"
-    Help
 }
