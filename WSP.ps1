@@ -64,9 +64,9 @@ param(
 # Useful debugging commands
 ###
 
-# Get-Service | Where { $_.Status -eq "Stopped" } | Format-Table Name | Out-Host -Paging
-# Get-Service | Where { $_.Status -eq "Running" } | Format-Table Name | Out-Host -Paging
-# Get-Service | Where { $_.Name -like "StartWith*" } | Format-Table Name
+# Get-Service | Where-Object { $_.Status -eq "Stopped" } | Format-Table Name | Out-Host -Paging
+# Get-Service | Where-Object { $_.Status -eq "Running" } | Format-Table Name | Out-Host -Paging
+# Get-Service | Where-Object { $_.Name -like "StartWith*" } | Format-Table Name
 
 
 ###
@@ -171,15 +171,15 @@ $profiles_required.Add('VRAR', $vrar_required)
 $profiles_required.Add('VRGAME', $vrgame_required)
 
 # Sanity checks
-$ar_required | Where { $hogs -NotContains $_ }
-$dev_required | Where { $hogs -NotContains $_ }
-$game_required | Where { $hogs -NotContains $_ }
-$leisure_required | Where { $hogs -NotContains $_ }
-$stan_required | Where { $hogs -NotContains $_ }
-$vr_required | Where { $hogs -NotContains $_ }
-$vrar_required | Where { $hogs -NotContains $_ }
-$vrgame_required | Where { $hogs -NotContains $_ }
-$profiles_required.Keys | Where { $profiles -NotContains $_ }
+$ar_required | Where-Object { $hogs -NotContains $_ }
+$dev_required | Where-Object { $hogs -NotContains $_ }
+$game_required | Where-Object { $hogs -NotContains $_ }
+$leisure_required | Where-Object { $hogs -NotContains $_ }
+$stan_required | Where-Object { $hogs -NotContains $_ }
+$vr_required | Where-Object { $hogs -NotContains $_ }
+$vrar_required | Where-Object { $hogs -NotContains $_ }
+$vrgame_required | Where-Object { $hogs -NotContains $_ }
+$profiles_required.Keys | Where-Object { $profiles -NotContains $_ }
 
 
 ###
@@ -195,7 +195,7 @@ function Stop-Services
 
     foreach ($Service in $ServicesList)
     {
-        If (Get-Service $Service | Where { $_.Status -eq "Running" -or $_.Status -eq "Paused" })
+        If (Get-Service $Service | Where-Object { $_.Status -eq "Running" -or $_.Status -eq "Paused" })
         {
 
             Write-Host "- $Service"
@@ -206,7 +206,7 @@ function Stop-Services
             }
             catch
             {
-                Write-Host "`tService $Service cannot be stopped. Trying to suspend it."
+                Write-Host "Service $Service cannot be stopped. Trying to suspend it."
 
                 Suspend-Service $Service
             }
@@ -226,11 +226,11 @@ function Start-Services
     {
         Write-Host "- $Service"
 
-        If (Get-Service $Service | Where { $_.Status -eq "Stopped" })
+        If (Get-Service $Service | Where-Object { $_.Status -eq "Stopped" })
         {
             Start-Service $Service
         }
-        elseif (Get-Service $Service | Where { $_.Status -eq "Paused" })
+        elseif (Get-Service $Service | Where-Object { $_.Status -eq "Paused" })
         {
             Resume-Service $Service
         }
@@ -269,7 +269,7 @@ If ($Profile -eq 'CS')
 ElseIf ($profiles.Contains($Profile))
 {
     $required = $profiles_required[$Profile]
-    $stop = $hogs | Where { $required -NotContains $_ }
+    $stop = $hogs | Where-Object { $required -NotContains $_ }
     Stop-Services($stop)
     Start-Services($required)
 }
