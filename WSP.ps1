@@ -1,9 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    A PowerShell script to selectively stop/suspend and resume services based on profiles.
+    A PowerShell script to selectively stop/suspend and start/resume services based on profiles.
 
 .DESCRIPTION
-    The WSP.ps1 script switches services profiles and optionnally creates Start Menu
+    The WSP.ps1 script switches services profiles and optinnally creates Start Menu
     shortcuts to easily target these profiles.
     The goal is to only run required services for each activity to limit unwanted resources usage
     by mundane services or prevent conflicts.
@@ -17,7 +17,7 @@
     None. You cannot pipe objects to WSP.ps1.
 
 .OUTPUTS
-    None. WSP.ps1 does not generate output and merely prints stopped/suspended/resumed services.
+    None. WSP.ps1 does not generate output and merely prints services actions.
 
 .EXAMPLE
     PS> .\WSP.ps1 GAME
@@ -25,7 +25,7 @@
 
 .EXAMPLE
     PS> .\WSP.ps1 CS
-    Creates global shortcuts for each available profile.
+    Creates global Start Menu shortcuts for each available profile.
 
 .NOTES
     Windows Services Profiles
@@ -147,6 +147,7 @@ $vrgame_required = $vr_required + @(
 ,'vorpX Service'
 )
 
+# 'CS' is currently reserved for creating shortcuts. Don’t use here.
 $profiles = @(
 ,'AR'
 ,'DEV'
