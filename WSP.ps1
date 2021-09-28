@@ -1,6 +1,6 @@
-<#
+﻿<#
 .SYNOPSIS
-    Selectively stop/suspend and resume services based on profiles.
+    A PowerShell script to selectively stop/suspend and resume services based on profiles.
 
 .DESCRIPTION
     The WSP.ps1 script switches services profiles and optionnally creates Start Menu
@@ -14,10 +14,10 @@
     Left empty it prints out the help.
 
 .INPUTS
-    None. You cannot pipe objectsto WSP.ps1.
+    None. You cannot pipe objects to WSP.ps1.
 
 .OUTPUTS
-    None. WSP.ps1 does not generate output and merely prints suspended/resumed services.
+    None. WSP.ps1 does not generate output and merely prints stopped/suspended/resumed services.
 
 .EXAMPLE
     PS> .\WSP.ps1 GAME
@@ -29,10 +29,12 @@
 
 .NOTES
     Windows Services Profiles
-    Copyright 2021 Raphael Doursenaud <rdoursenaud@gmail.com>
+    Copyright 2021 Raphaël Doursenaud <rdoursenaud@gmail.com>
+    License: Microsoft Public License (Ms-PL)
+    Uses Get-SpecialFolderPath.ps1 from https://github.com/beatcracker/Powershell-Misc
 
 .LINK
-    https://raphael.doursenaud.fr
+    https://github.com/rdoursenaud/wsp
 #>
 
 # RunAsAdministrator was introduced in PowerShell v4.0.
