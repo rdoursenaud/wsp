@@ -32,8 +32,11 @@ prevent conflicts.
 
 ### PARAMETER Profile
 
-A profile identifier. The special profile 'CS' creates/updates global Start Menu shortcuts to this script for each
-profile. Left empty it prints out the help.
+A profile identifier.
+
+The special profile 'CS' creates/updates global Start Menu shortcuts to this script for each profile.
+
+Left empty it prints out the help.
 
 ### INPUTS
 
