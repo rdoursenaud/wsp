@@ -81,11 +81,14 @@ $hogs = @(
 ,'Apple Mobile Device Service'
 ,'DSAService'
 ,'DSAUpdateService'
+,'EpocCamService'
 ,'Jackett'
-,'JetBrainsEtwHost'
+,'JetBrainsEtwHost.16'
 ,'JTAGServer'
-,'LeapService'
+,'LGHUBUpdaterService'  # Logitech
+,'nebula'  # Logitech Video Camera
 ,'MullvadVPN'
+,'LenovoDisplayControlCenterService'
 ,'NIHardwareService'
 ,'NIHostIntegrationAgent'
 #,'OVRLibraryService'  # Stopped by OVRService
@@ -93,43 +96,66 @@ $hogs = @(
 ,'NvBroadcast.ContainerLocalSystem'
 ,'PaceLicenseDServices'
 ,'Presonus Hardware Access Service'
+,'RtkAudioUniversalService'
 ,'rtpMIDIService'
-,'Shibari.Dom.Server'
-,'Synergy'
+,'SamsungMagicianSVC'
+#,'Shibari.Dom.Server'
+,'SoftubeInstallerDaemon'
+,'spacedeskService'
+,'Synergy'  # Can take a while to stop
 ,'TbtHostControllerService'
+,'TbtP2pShortcutService'
+,'UltraleapTracking'
+,'UsbClientService'
 ,'vorpX Service'
 ,'WD Drive Manager'
+,'x10nets'
 )
 
 $ar_required = @(
-,'LeapService'
+,'UltraleapTracking'
 )
 
 $dev_required = @(
-,'JetBrainsEtwHost'
+,'Apple Mobile Device Service'
+,'JetBrainsEtwHost.16'
 ,'JTAGServer'
 #,'kite'
 ,'Presonus Hardware Access Service'
+,'spacedeskService'
+,'Synergy'  # Can take a while to stop
 )
 
 $game_required = @(
-,'Shibari.Dom.Server'
+#,'Shibari.Dom.Server'
+
 )
 
 $leisure_required = @(
-,'Apple Mobile Device Service'
 ,'Jackett'
 ,'MullvadVPN'
-,'NvBroadcast.ContainerLocalSystem'
 ,'Presonus Hardware Access Service'  # For HP out
-,'Synergy'
 ,'WD Drive Manager'
+,'x10nets'
 )
 
 $stan_required = @(
 ,'Apple Mobile Device Service'
 ,'NIHardwareService'
 ,'NIHostIntegrationAgent'
+,'PaceLicenseDServices'
+,'Presonus Hardware Access Service'
+,'rtpMIDIService'
+,'TbtHostControllerService'
+)
+
+$stream_required = @(
+,'Apple Mobile Device Service'
+,'EpocCamService'
+,'nebula'
+,'NIHardwareService'
+,'NIHostIntegrationAgent'
+,'NvBroadcast.ContainerLocalSystem'
 ,'PaceLicenseDServices'
 ,'Presonus Hardware Access Service'
 ,'rtpMIDIService'
@@ -154,6 +180,7 @@ $profiles = @(
 ,'GAME'
 ,'LEISURE'
 ,'STAN'
+,'STREAM'
 ,'VR'
 ,'VRAR'
 ,'VRGAME'
@@ -166,6 +193,7 @@ $profiles_required.Add('DEV', $dev_required)
 $profiles_required.Add('GAME', $game_required)
 $profiles_required.Add('LEISURE', $leisure_required)
 $profiles_required.Add('STAN', $stan_required)
+$profiles_required.Add('STREAM', $stream_required)
 $profiles_required.Add('VR', $vr_required)
 $profiles_required.Add('VRAR', $vrar_required)
 $profiles_required.Add('VRGAME', $vrgame_required)
@@ -176,6 +204,7 @@ $dev_required | Where-Object { $hogs -NotContains $_ }
 $game_required | Where-Object { $hogs -NotContains $_ }
 $leisure_required | Where-Object { $hogs -NotContains $_ }
 $stan_required | Where-Object { $hogs -NotContains $_ }
+$stream_required | Where-Object { $hogs -NotContains $_ }
 $vr_required | Where-Object { $hogs -NotContains $_ }
 $vrar_required | Where-Object { $hogs -NotContains $_ }
 $vrgame_required | Where-Object { $hogs -NotContains $_ }
@@ -243,8 +272,17 @@ function Start-Services
 # Main
 ####
 
+
 If ($Profile -eq 'CS')
 {
+    # Run elevated
+    if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator"))
+    {
+        Write-Host "Creating shortcut requires elevated privileges."
+        Write-Host "Please run as administrator!"
+        exit
+    }
+
     # FIXME: Remove old shortcuts safely?
 
     # Create shortcuts
@@ -254,6 +292,8 @@ If ($Profile -eq 'CS')
     $powershell = (Get-Process -Id $pid).Path
     foreach ($Profile in $profiles)
     {
+        Write-Host "Creating shortcut for $Profile profile"
+
         $lnkPath = "$CSIDL_COMMON_STARTMENU\WSP-$Profile.lnk"
         $lnk = $WshShell.CreateShortcut($lnkPath)
         $lnk.TargetPath = "$powershell"
